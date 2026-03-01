@@ -22,11 +22,11 @@ const rateLimiter = rateLimit({
 // (https://expressjs.com/en/advanced/best-practice-security.html)
 app.use(helmet()); // hides or changes headers to reduce vulnerability attacks
 app.use(compression()); // zips the data to be sent for faster data retrieval
-
+app.use(cors()); // use CORS to allow origins globally
 // tells Express to trust the proxy's IP header so the rate limiter can see the REAL user's IP
 app.set('trust proxy', 1);
 
-app.get("/timezone", rateLimiter, cors(), async (req, res) => {
+app.get("/timezone", rateLimiter, async (req, res) => {
     const latitude = parseFloat(req.query.latitude); // string by default, convert to float
     const longitude = parseFloat(req.query.longitude);
 
