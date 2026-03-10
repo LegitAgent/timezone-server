@@ -31,7 +31,7 @@ app.get("/timezone", rateLimiter, async (req, res) => {
     const longitude = parseFloat(req.query.longitude);
 
     if (latitude === undefined || longitude === undefined) {
-        return res.status(400).json({ error: "Missing lat or lng" });
+        return res.status(400).json({ error: "Missing latitude or longitude" });
     }
     if (Number.isNaN(latitude) || Number.isNaN(longitude)) {
         return res.status(400).json({ error: "Invalid coordinates" });
@@ -44,8 +44,8 @@ app.get("/timezone", rateLimiter, async (req, res) => {
     const timeout = setTimeout(() => controller.abort(), 5000); // 5 second limit before timeout
 
     try {
-        const url = `https://api.timezonedb.com/v2.1/get-time-zone?key=${API_KEY}&format=json&by=position&lat=${latitude}&lng=${longitude}`;
-        const response = await fetch(url, {signal: controller.signal}); // attach controller
+        const URL = `https://api.timezonedb.com/v2.1/get-time-zone?key=${API_KEY}&format=json&by=position&lat=${latitude}&lng=${longitude}`;
+        const response = await fetch(URL, {signal: controller.signal}); // attach controller
 
         if (!response.ok) {
             throw new Error(`External API status: ${response.status}`);
@@ -53,7 +53,7 @@ app.get("/timezone", rateLimiter, async (req, res) => {
 
         const data = await response.json();
         res.json(data);
-        console.log("SUCCESS");
+        console.log("SUCCESS GET LOCATION");
     } catch(error) { 
         if (error.name === 'AbortError') {
             console.error("Request timed out");
@@ -64,6 +64,33 @@ app.get("/timezone", rateLimiter, async (req, res) => {
         }
     } finally {
         clearTimeout(timeout); // stop timeout timer
+    }
+});
+
+app.get("/listtimezones", rateLimiter, async(req, res) => {
+    const controller = new AbortController(); // kill switch for API req
+    const timeout = setTimeout(() => controller.abort(), 5000); // 5 second limit before timeout
+    try {
+        const URL = `http://api.timezonedb.com/v2.1/list-time-zone?key=${API_KEY}&format=json`
+        const response = await fetch(URL, {signal: controller.signal})
+
+        if(!response.ok) {
+            throw new Error(`External API status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        res.json(data);
+        console.log("SUCCESS GET TIMEZONE LIST");
+    } catch(error) {
+        if (error.name === 'AbortError') {
+            console.error("Request timed out");
+            res.status(504).json({ error: "External API took too long to respond" });
+        } else {
+            console.error("Proxy Error:", error.message);
+            res.status(500).json({ error: "Internal server error" });
+        }
+    } finally {
+        clearTimeout(timeout);
     }
 });
 
