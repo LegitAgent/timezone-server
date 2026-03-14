@@ -96,42 +96,6 @@ app.get("/listtimezones", rateLimiter, async(req, res) => {
     }
 });
 
-// conversion timezone endpoint
-app.get("/converttimezone", rateLimiter, async(req, res) => {
-
-    const fromZone = req.query.fromZone;
-    const toZone = req.query.toZone;
-
-    if (fromZone === undefined || toZone === undefined) {
-        return res.status(400).json({ error: "Missing source, target timezone, or time" });
-    }
-
-    const controller = new AbortController(); // kill switch for API req
-    const timeout = setTimeout(() => controller.abort(), 5000); // 5 second limit before timeout
-    try {
-        const URL = `http://api.timezonedb.com/v2.1/convert-time-zone?key=${API_KEY}&format=json&from=${fromZone}&to=${toZone}`;
-        const response = await fetch(URL, {signal: controller.signal});
-
-        if (!response.ok) {
-            throw new Error(`External API status: ${response.status}`);
-        }
-
-        const data = await response.json();
-        res.json(data);
-        console.log("SUCCESS CONVERT TIMEZONE");
-    } catch(error) {
-        if (error.name === 'AbortError') {
-            console.error("Request timed out");
-            res.status(504).json({ error: "External API took too long to respond" });
-        } else {
-            console.error("Proxy Error:", error.message);
-            res.status(500).json({ error: "Internal server error" });
-        }
-    } finally {
-        clearTimeout(timeout);
-    }
-});
-
 // if not /timezone, 404
 app.use((req, res) => { 
     res.status(404).json({ error: "Route not found" });
