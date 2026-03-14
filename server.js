@@ -71,7 +71,7 @@ app.get("/listtimezones", rateLimiter, async(req, res) => {
     const controller = new AbortController(); // kill switch for API req
     const timeout = setTimeout(() => controller.abort(), 5000); // 5 second limit before timeout
     try {
-        const URL = `http://api.timezonedb.com/v2.1/list-time-zone?key=${API_KEY}&format=json`
+        const URL = `http://api.timezonedb.com/v2.1/list-time-zone?key=${API_KEY}&format=json&fields=countryCode,countryName,zoneName,gmtOffset,dst,timestamp`
         const response = await fetch(URL, {signal: controller.signal})
 
         if(!response.ok) {
